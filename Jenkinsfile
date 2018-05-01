@@ -4,17 +4,32 @@ pipeline {
   }
   stages {
     stage('Say Hello') {
+      steps {
+        echo "Hello ${params.Name}!"
+        sh 'java -version'
+        echo "${TEST_USER_USR}"
+        echo "${TEST_USER_PSW}"
+      }
+    }
+    stage('Testing') {
+      failFast true
       parallel {
-        stage('Say Hello') {
+        stage('Java 8') {
+          agent {
+            label 'jdk8'
+          }
           steps {
-            echo "Hello ${MY_NAME}!"
             sh 'java -version'
+            sleep(time: 10, unit: 'SECONDS')
           }
         }
-        stage('say hello') {
+        stage('Java 9') {
+          agent {
+            label 'jdk9'
+          }
           steps {
-            echo 'Hello World!'
             sh 'java -version'
+            sleep(time: 20, unit: 'SECONDS')
           }
         }
       }
@@ -23,6 +38,13 @@ pipeline {
   environment {
     MY_NAME = 'Mary'
     TEST_USER = credentials('test-user')
+  }
+  post {
+    aborted {
+      echo 'Why didn\'t you push my button?'
+      
+    }
+    
   }
   parameters {
     string(name: 'Name', defaultValue: 'whoever you are', description: 'Who should I say hi to?')
